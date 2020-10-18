@@ -1,0 +1,9 @@
+.absolute-center {
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    bottom: 50%;
+    right: 50%;
+
+}

@@ -1,54 +1,121 @@
-import React, { useState, useEffect } from "react";
-import { ThemeProvider } from "styled-components";
-import { HashRouter as Router, Switch, Route } from "react-router-dom";
-import AuthContext from "./contexts/auth";
-import SignIn from "./pages/SignIn/SignIn";
-import themes from "./themes";
-import "materialize-css/dist/css/materialize.min.css";
-import Surveys from "./pages/Surveys";
-import SignUp from "./pages/SignUp/SignUp";
-import Results from "./pages/Results";
-import Survey from "./pages/Survey";
-import CreateSurvey from "./pages/CreateSurvey";
-import AdminRoute from "./components/ProtectedRoutes/adminProtected";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import "materialize-css";
-import { URL_ROOT, URL_CREATE, URL_REGISTER, URL_LOGIN, URL_SURVEY, URL_RESULTS } from "./utils/constants";
+import React, {Component} from 'react';
+import {BrowserRouter, Link, Route, Switch} from "react-router-dom";
+import Home from "./Home";
+import AuthService from "./services/auth.service"
+import Login from "./auth/Login";
+import Registration from "./auth/Registration";
+import Dashboard from "./Dashboard";
+import "bootstrap/dist/css/bootstrap.min.css";
+import AddQuiz from "./quiz/AddQuiz";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+import "./App.css"
 
-function App() {
-  const [user, setUser] = useState({ isLoggedIn: false });
-  useEffect(() => {
-    let userStorage = localStorage.getItem("user");
-    if (userStorage) {
-      userStorage = JSON.parse(userStorage);
-      setUser(userStorage);
+class App extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            currentUser: undefined
+        }
+
     }
-  }, []);
 
-  return (
-    <ThemeProvider theme={themes}>
-      <AuthContext.Provider value={{ user, setUser }}>
-        <Router basename={URL_ROOT}>
-          <Switch>
-            <AdminRoute path={URL_CREATE} component={CreateSurvey} />
-            <Route exact path={`${URL_SURVEY}/:surveyId/complete`} component={Survey} />
-            <Route exact path={`${URL_SURVEY}/:surveyId`} component={Survey} />
-            <Route
-              exact
-              path={`${URL_SURVEY}/:surveyId/questions/:questionId`}
-              component={Survey}
-            />
-            <Route path={URL_REGISTER} component={SignUp} />
-            <Route path={`${URL_RESULTS}/:id`} component={Results} exact />
-            <Route path={URL_LOGIN} component={SignIn} />
-            <Route path={URL_ROOT} component={Surveys} />
-          </Switch>
-        </Router>
-        <ToastContainer />
-      </AuthContext.Provider>
-    </ThemeProvider>
-  );
+    componentDidMount() {
+        const user = AuthService.getCurrentUser();
+        if (user) {
+            this.setState({
+                currentUser: user
+            });
+        }
+    }
+
+    logOut = () => {
+        AuthService.logout();
+    }
+
+
+    render() {
+        return (
+            <BrowserRouter>
+                <div>
+                    <nav className={"navbar navbar-expand navbar-dark bg-dark"}>
+                        <Link to={"/"} className={"navbar-brand"}>
+                            Quiz Creator
+                        </Link>
+                        <div className={"navbar-nav mr auto"}>
+                            <li className={"nav-item"}>
+                                <Link to={"/home"} className={"nav-link"}>Home</Link>
+                            </li>
+                        </div>
+
+                        {this.state.currentUser ? (
+                            <div className={"navbar-nav ml-auto"}>
+                                <li className={"nav-item"}>
+                                    <Link to={"/dashboard"} className={"nav-link"}>
+                                        Quizzes
+                                    </Link>
+                                </li>
+                                <li className={"nav-item"}>
+                                    <Link to={"/add-quiz"} className={"nav-link"}>
+                                        Add Quiz
+                                    </Link>
+                                </li>
+                                <li className={"nav-item"}>
+                                    <a href={"/login"} onClick={this.logOut} className={"nav-link"}>
+                                        Logout
+                                    </a>
+                                </li>
+                            </div>
+
+                        ) : (
+                            <div className={"navbar-nav ml-auto"}>
+                                <li className={"nav_item"}>
+                                    <Link to={"/login"} className={"nav-link"}>
+                                        Login
+                                    </Link>
+                                </li>
+                                <li className={"nav_item"}>
+                                    <Link to={"/registration"} className={"nav-link"}>
+                                        Register
+                                    </Link>
+                                </li>
+                            </div>
+                        )}
+                    </nav>
+                    <div className="container mt-3">
+                        <Switch>
+                            <Route exact path={["/", "/home"]}
+                                   render={props => (
+                                       <Home {...props} />
+                                   )}
+                            />
+                            <Route exact path={"/login"}
+                                   render={props => (
+                                       <Login {...props}/>
+                                   )}
+                            />
+                            <Route exact path={"/registration"}
+                                   render={props => (
+                                       <Registration {...props}/>
+                                   )}
+                            />
+                            <Route exact path={"/dashboard"}
+                                   render={props => (
+                                       <Dashboard {...props}/>
+                                   )}
+                            />
+                            <Route exact path={"/add-quiz"}
+                                   render={props => (
+                                       <AddQuiz {...props}/>
+                                   )}
+                            />
+                        </Switch>
+                    </div>
+                </div>
+
+            </BrowserRouter>
+
+        );
+    }
 }
 
 export default App;
